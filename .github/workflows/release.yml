@@ -45,7 +45,15 @@ jobs:
           curl -fsSL https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/mcp-publisher_linux_amd64.tar.gz -o publisher.tar.gz
           printf '%s\n' 'a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc  publisher.tar.gz' | sha256sum --check
           tar -xzf publisher.tar.gz mcp-publisher
+      - name: Authenticate to the official MCP Registry
+        run: |
+          ./mcp-publisher login github-oidc > "$RUNNER_TEMP/mcp-login.txt" 2>&1 || {
+            python3 scripts/registry-error.py "$RUNNER_TEMP/mcp-login.txt"
+            exit 1
+          }
       - name: Publish to the official MCP Registry
         run: |
-          ./mcp-publisher login github-oidc
-          ./mcp-publisher publish
+          ./mcp-publisher publish > "$RUNNER_TEMP/mcp-publish.txt" 2>&1 || {
+            python3 scripts/registry-error.py "$RUNNER_TEMP/mcp-publish.txt"
+            exit 1
+          }
