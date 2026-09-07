@@ -1,0 +1,10 @@
+{
+  "name": "painintheagent-mcp",
+  "version": "0.1.0",
+  "description": "Text watermark rewrites with fidelity checks, using the free Pain in the Agent account allowance.",
+  "author": { "name": "Kirill Balakhonov", "url": "https://painintheagent.com/about/" },
+  "homepage": "https://painintheagent.com/integrations/",
+  "repository": "https://github.com/krllagent/painintheagent-mcp",
+  "license": "MIT",
+  "keywords": ["mcp", "writing", "watermark", "rewrite"]
+}

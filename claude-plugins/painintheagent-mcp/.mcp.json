@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "painintheagent": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/dist/index.cjs"],
+      "env": {
+        "PAININTHEAGENT_API_KEY": "${PAININTHEAGENT_API_KEY:-}",
+        "PAININTHEAGENT_BASE_URL": "${PAININTHEAGENT_BASE_URL:-https://painintheagent.com}"
+      }
+    }
+  }
+}

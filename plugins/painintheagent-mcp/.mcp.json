@@ -1,0 +1,10 @@
+{
+  "mcpServers": { "painintheagent": {
+    "command": "node",
+    "args": ["dist/index.cjs"],
+    "cwd": ".",
+    "env_vars": ["PAININTHEAGENT_API_KEY", "PAININTHEAGENT_BASE_URL"],
+    "startup_timeout_sec": 15,
+    "tool_timeout_sec": 40
+  } }
+}
