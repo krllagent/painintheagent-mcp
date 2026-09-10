@@ -1,7 +1,7 @@
 {
   "name": "painintheagent-mcp",
-  "version": "0.1.0",
-  "description": "Rewrite text through the free Pain in the Agent service with fidelity checks.",
+  "version": "0.2.0",
+  "description": "Humanize, rewrite and analyze prose with the shared Pain in the Agent allowance.",
   "author": {
     "name": "Kirill Balakhonov",
     "url": "https://painintheagent.com/about/"
@@ -9,11 +9,14 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Pain in the Agent",
-    "shortDescription": "Text watermark rewrites with fidelity checks",
-    "longDescription": "Use the same free rewrite pipeline as painintheagent.com from your AI client. Start a rewrite, follow its progress and inspect the result with fidelity notes. Requires a free account and an API key. The allowance is shared with the web tool.",
+    "shortDescription": "Humanizing, rewriting and AI writing checks",
+    "longDescription": "Use the text tools from painintheagent.com with the same confirmed account. Humanize writing, rewrite text watermarks, compare versions or inspect AI writing signals. All tools share one allowance; the results do not prove authorship or verify private vendor watermarks.",
     "developerName": "Kirill Balakhonov",
     "category": "Productivity",
-    "capabilities": ["Read", "Write"],
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
     "websiteURL": "https://painintheagent.com/integrations/",
     "privacyPolicyURL": "https://painintheagent.com/privacy/",
     "defaultPrompt": "Rewrite this draft with Pain in the Agent and show me the fidelity notes."
@@ -22,5 +25,11 @@
   "homepage": "https://painintheagent.com/integrations/",
   "repository": "https://github.com/krllagent/painintheagent-mcp",
   "license": "MIT",
-  "keywords": ["mcp", "writing", "watermark", "rewrite"]
+  "keywords": [
+    "mcp",
+    "writing",
+    "humanizer",
+    "ai-detector",
+    "watermark"
+  ]
 }

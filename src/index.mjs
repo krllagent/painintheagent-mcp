@@ -3,8 +3,8 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { ClientError, RewriteClient } from "./client.mjs";
 
-const instructions = "Use this service only when the user asks to rewrite their text or reduce a text watermark. start_rewrite sends the supplied text to painintheagent.com and consumes the account's shared free quota on success. Save the run_id and use get_rewrite; do not retry by starting a new run. Keep this MCP process open during processing. Review the returned text and fidelity notes before publishing. It cannot verify Claude or Gemini private watermark keys.";
-const server = new McpServer({ name: "painintheagent-mcp", version: "0.1.0" }, { instructions });
+const instructions = "Use this service only for text operations the user requests: rewriting, humanizing, comparing versions or checking AI writing signals. Every successful operation uses one shared account run across the website, API and MCP. Save the run_id and read get_result instead of starting another request. Keep this MCP process open during processing. The service cannot verify private vendor watermarks or prove authorship. Show source notes and quoted style evidence with results.";
+const server = new McpServer({ name: "painintheagent-mcp", version: "0.2.0" }, { instructions });
 let client;
 const api = () => client ??= new RewriteClient();
 const runId = z.string().uuid().describe("The run_id returned by start_rewrite. Reuse it to retrieve that run.");
@@ -44,6 +44,25 @@ server.registerTool("get_limits", {
   inputSchema: {},
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
 }, () => result(() => api().limits()));
+
+const textSchema = z.string().min(100).max(20_000).describe("100–10,000 Unicode characters of prose the user asked to process.");
+const startAnnotations = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true };
+server.registerTool("start_humanize", {
+  title: "Humanize AI writing", description: "Make targeted style edits with source checks. Optional watermark_removal adds deep rewriting. Uses one shared run, stores submitted text, and returns a run_id. Read with get_result. No private watermark guarantee.",
+  inputSchema: { text: textSchema, watermark_removal: z.boolean().default(false), run_id: runId.optional() }, annotations: startAnnotations,
+}, input => result(() => api().start({ ...input, operation: "humanize" })));
+server.registerTool("start_watermark_comparison", {
+  title: "Compare a source and rewrite", description: "Compare source_text and candidate_text for meaning changes. Uses one shared run and stores both supplied texts. This does not detect Claude or Gemini private watermarks. Read with get_result.",
+  inputSchema: { source_text: textSchema, candidate_text: textSchema, run_id: runId.optional() }, annotations: startAnnotations,
+}, input => result(() => api().start({ text: input.source_text, candidate_text: input.candidate_text, run_id: input.run_id, operation: "compare" })));
+server.registerTool("start_ai_detection", {
+  title: "Check AI writing signals", description: "Inspect at least 80 words of English or Russian prose for AI-like writing patterns. Shows quoted evidence, not a calibrated authorship probability. Uses one shared run and stores the text. Read with get_result.",
+  inputSchema: { text: textSchema, run_id: runId.optional() }, annotations: startAnnotations,
+}, input => result(() => api().start({ ...input, operation: "detect-ai" })));
+server.registerTool("get_result", {
+  title: "Read a text tool result", description: "Read progress or a result by run_id for any text tool. Never starts model work or uses another run.",
+  inputSchema: { run_id: runId }, annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true },
+}, ({ run_id }) => result(() => api().get(run_id)));
 
 server.connect(new StdioServerTransport()).catch(() => {
   process.stderr.write("MCP startup failed. Check the installation.\n");

@@ -2,35 +2,97 @@
   "manifest_version": "0.3",
   "name": "painintheagent-mcp",
   "display_name": "Pain in the Agent",
-  "version": "0.1.0",
-  "description": "Text watermark rewrites with fidelity checks using a shared free account allowance.",
-  "author": { "name": "Kirill Balakhonov", "url": "https://painintheagent.com/about/" },
+  "version": "0.2.0",
+  "description": "Humanizing, watermark rewriting and text analysis with one shared account allowance.",
+  "author": {
+    "name": "Kirill Balakhonov",
+    "url": "https://painintheagent.com/about/"
+  },
   "homepage": "https://painintheagent.com/integrations/",
   "documentation": "https://github.com/krllagent/painintheagent-mcp",
-  "repository": { "type": "git", "url": "https://github.com/krllagent/painintheagent-mcp.git" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/krllagent/painintheagent-mcp.git"
+  },
   "license": "MIT",
-  "privacy_policies": ["https://painintheagent.com/privacy/"],
-  "keywords": ["writing", "watermark", "rewrite", "mcp"],
+  "privacy_policies": [
+    "https://painintheagent.com/privacy/"
+  ],
+  "keywords": [
+    "writing",
+    "humanizer",
+    "ai-detector",
+    "watermark",
+    "mcp"
+  ],
   "server": {
     "type": "node",
     "entry_point": "dist/index.cjs",
     "mcp_config": {
       "command": "node",
-      "args": ["${__dirname}/dist/index.cjs"],
+      "args": [
+        "${__dirname}/dist/index.cjs"
+      ],
       "env": {
         "PAININTHEAGENT_API_KEY": "${user_config.api_key}",
         "PAININTHEAGENT_BASE_URL": "${user_config.base_url}"
       }
     }
   },
-  "compatibility": { "platforms": ["darwin", "win32", "linux"], "runtimes": { "node": ">=22.0.0" } },
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=22.0.0"
+    }
+  },
   "tools": [
-    { "name": "start_rewrite", "description": "Start a text rewrite and return its request ID." },
-    { "name": "get_rewrite", "description": "Read progress or the saved rewrite and fidelity notes." },
-    { "name": "get_limits", "description": "Read the free account allowance shared with the website." }
+    {
+      "name": "start_rewrite",
+      "description": "Start a text rewrite and return its request ID."
+    },
+    {
+      "name": "get_rewrite",
+      "description": "Read progress or the saved rewrite and fidelity notes."
+    },
+    {
+      "name": "get_limits",
+      "description": "Read the free account allowance shared with the website."
+    },
+    {
+      "name": "start_humanize",
+      "description": "Humanize AI writing with optional deep watermark rewriting."
+    },
+    {
+      "name": "start_watermark_comparison",
+      "description": "Compare original and rewritten text for meaning changes."
+    },
+    {
+      "name": "start_ai_detection",
+      "description": "Check English or Russian AI writing signals with evidence."
+    },
+    {
+      "name": "get_result",
+      "description": "Read progress or a saved result for any text tool."
+    }
   ],
   "user_config": {
-    "api_key": { "type": "string", "title": "Pain in the Agent API key", "description": "Create a key after signing in at https://painintheagent.com/integrations/", "sensitive": true, "required": true },
-    "base_url": { "type": "string", "title": "Service base URL", "description": "Keep the default unless your operator provides an API gateway.", "default": "https://painintheagent.com", "required": false }
+    "api_key": {
+      "type": "string",
+      "title": "Pain in the Agent API key",
+      "description": "Create a key after signing in at https://painintheagent.com/integrations/",
+      "sensitive": true,
+      "required": true
+    },
+    "base_url": {
+      "type": "string",
+      "title": "Service base URL",
+      "description": "Keep the default unless your operator provides an API gateway.",
+      "default": "https://painintheagent.com",
+      "required": false
+    }
   }
 }

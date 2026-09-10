@@ -65,3 +65,21 @@ test("invalid inputs and missing credentials fail before any network request", a
   await assert.rejects(client.get("not-an-id"), /UUID/u);
   assert.equal(called, false);
 });
+
+test("new text operations send only their own options and share local idempotency", async () => {
+  const requests = [];
+  const client = new RewriteClient({ PAININTHEAGENT_API_KEY: key, PAININTHEAGENT_BASE_URL: "http://127.0.0.1:8787/painintheagent" }, async (url, init) => {
+    requests.push({ url, body: JSON.parse(init.body) });
+    return Response.json({ status: "success", text: "A fictional result." });
+  });
+  await client.start({ text, run_id: id, operation: "humanize", watermark_removal: true });
+  assert.deepEqual(requests[0].body, { text, run_id: id, operation: "humanize", watermark_removal: true });
+  assert.match(requests[0].url, /^http:\/\/127\.0\.0\.1:8787\/painintheagent\//u);
+  await client.start({ text, run_id: id, operation: "humanize", watermark_removal: true });
+  await assert.rejects(client.start({ text, run_id: id }), /different input/u);
+  await assert.rejects(client.start({ text, run_id: id, operation: "humanize", watermark_removal: false }), /different input/u);
+  assert.equal(requests.length, 1);
+  await assert.rejects(client.start({ text, operation: "compare" }), /candidate/u);
+  await assert.rejects(client.start({ text, operation: "detect-ai" }), /80/u);
+  assert.equal(requests.length, 1);
+});

@@ -1,8 +1,8 @@
 {
   "name": "painintheagent-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
-  "description": "MCP client for the free Pain in the Agent text watermark rewrite service",
+  "description": "MCP client for Pain in the Agent humanizing, rewriting and text analysis tools",
   "license": "MIT",
   "author": "Kirill Balakhonov",
   "repository": "github:krllagent/painintheagent-mcp",
