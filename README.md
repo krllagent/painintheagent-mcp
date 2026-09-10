@@ -1,8 +1,8 @@
 # Pain in the Agent MCP
 
-Rewrite text through the [free Pain in the Agent service](https://painintheagent.com/tools/ai-text-watermark-remover/) from an AI client. The service returns revised prose and fidelity notes. The account allowance is 100 successful rewrites per month, shared with the web tool, with 100–10,000 characters per request.
+Use the [Pain in the Agent text tools](https://painintheagent.com/tools/) from an AI client. Humanize drafts, rewrite text watermarks, compare versions or check AI writing signals. Confirmed email accounts share 100 successful operations per month across all tools, the website, API and MCP, with 100–10,000 characters per text.
 
-I tested the underlying rewrite pipeline against the published SynthID Text reference implementation. The [research and examples](https://painintheagent.com/blog/text-watermark-removal-retest/) describe the test and its limits. This client cannot verify Claude or Gemini's private watermark keys, and it does not guarantee detector results.
+The [research and examples](https://painintheagent.com/blog/text-watermark-removal-retest/) describe tests of rewrite methods against reference SynthID Text watermarks. Those measurements are separate from the live tool workflow. This client cannot verify Claude or Gemini's private watermark keys. AI writing signals are experimental style observations, not proof of authorship.
 
 ## Installation
 
@@ -49,12 +49,16 @@ Configure a stdio server with command `node` and one argument, the absolute path
 | Tool | What it does |
 | --- | --- |
 | `start_rewrite` | Starts a rewrite and promptly returns a `run_id`. Optional `slop_removal` is off by default. |
+| `start_humanize` | Makes targeted style edits with source checks. Optional `watermark_removal` adds deep rewriting. One shared run either way. |
+| `start_watermark_comparison` | Compares `source_text` and `candidate_text` for meaning changes. Does not detect private vendor watermarks. |
+| `start_ai_detection` | Checks at least 80 words of English or Russian prose for contextual AI writing signals. |
+| `get_result` | Reads progress or the saved result for any text tool without starting model work. |
 | `get_rewrite` | Returns progress, a saved result with fidelity notes, or an error for that ID. It starts no model work. |
 | `get_limits` | Reads the existing account allowance and input limits. |
 
-Ask your agent to rewrite the draft through Pain in the Agent, preserve its claims and conditions, and show the fidelity notes. Keep the client open while it works; a rewrite can take several minutes. The local MCP process holds the service's streaming connection. Closing that process can interrupt the run. This version is a local stdio MCP server, not a remote HTTP MCP endpoint for ChatGPT.
+Ask your agent to use the tool you need and show its source notes or quoted style evidence. Keep the client open while it works; deep rewriting can take several minutes. The local MCP process holds the streaming connection. Closing it can interrupt the run. The separate remote MCP endpoint at `https://painintheagent.com/mcp` supports OAuth and continues queued jobs after disconnecting.
 
-Save the request ID. If the stream fails, use `get_rewrite` with that same ID to check for a saved result. The client never automatically retries a POST. Reusing an ID with identical input retrieves that run; different input with the same ID is rejected. Failed runs do not consume successful-run quota. In-flight requests reserve capacity. A lost run releases its reservation after an hour, while its old ID remains unavailable for a new run.
+Save the request ID. If the stream fails, use `get_result` with that same ID. The earlier `get_rewrite` name still works. The client never automatically retries a POST. Reusing an ID with the same operation and input retrieves that run; a different operation, candidate or option is rejected. Failed runs do not consume successful-run quota. Pending requests reserve capacity until they finish or reach the server's deadline, and their IDs cannot start fresh work.
 
 ## Privacy and gateways
 

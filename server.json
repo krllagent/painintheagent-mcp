@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.krllagent/painintheagent-mcp",
   "title": "Pain in the Agent",
-  "description": "Text watermark rewrites with fidelity checks, using a shared free account allowance.",
-  "version": "0.1.0",
+  "description": "Humanize, rewrite and analyze prose with one shared Pain in the Agent account allowance.",
+  "version": "0.2.0",
   "websiteUrl": "https://painintheagent.com/integrations/",
   "repository": {
     "url": "https://github.com/krllagent/painintheagent-mcp",
@@ -12,8 +12,8 @@
   "packages": [
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/krllagent/painintheagent-mcp/releases/download/v0.1.0/painintheagent-mcp-0.1.0.mcpb",
-      "fileSha256": "722e6c4a4e0679a7402930a12d940b49d53be9be14c6589c6c0dbd9d9da49ba4",
+      "identifier": "https://github.com/krllagent/painintheagent-mcp/releases/download/v0.2.0/painintheagent-mcp-0.2.0.mcpb",
+      "fileSha256": "8d60637d084784f3e8573baeb0692e1cdfa3aab5594d7b337fbb1ac84f45d10c",
       "transport": {
         "type": "stdio"
       }

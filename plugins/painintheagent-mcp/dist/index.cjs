@@ -21494,12 +21494,26 @@ var RewriteClient = class {
   async limits() {
     return this.#read("/api/v1/watermark/limits");
   }
-  async start({ text, slop_removal = false, run_id = (0, import_node_crypto.randomUUID)() }) {
+  async start(input) {
+    const { text, slop_removal = false, run_id = (0, import_node_crypto.randomUUID)(), operation = "watermark", watermark_removal = false, candidate_text } = input;
     if (typeof text !== "string" || Array.from(text).length < 100 || Array.from(text).length > 1e4 || !text.trim()) throw new ClientError("Supply 100\u201310,000 characters of text. Long documents are not split automatically.");
     if (!UUID.test(run_id)) throw new ClientError("run_id must be a lowercase UUID.");
     if (typeof slop_removal !== "boolean") throw new ClientError("slop_removal must be a boolean.");
+    if (!["watermark", "humanize", "compare", "detect-ai"].includes(operation)) throw new ClientError("Choose a supported text operation.");
+    if (typeof watermark_removal !== "boolean") throw new ClientError("watermark_removal must be a boolean.");
+    if (operation === "compare" && (typeof candidate_text !== "string" || !candidate_text.trim() || Array.from(candidate_text).length < 100 || Array.from(candidate_text).length > 1e4)) throw new ClientError("Supply a candidate_text of 100\u201310,000 characters.");
+    if (operation === "detect-ai" && (text.match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*/gu) ?? []).length < 80) throw new ClientError("AI analysis requires at least 80 words of English or Russian prose.");
+    if (Object.hasOwn(input, "candidate_text") && operation !== "compare" || Object.hasOwn(input, "watermark_removal") && operation !== "humanize" || Object.hasOwn(input, "slop_removal") && operation !== "watermark") throw new ClientError("Use only the options for the selected text operation.");
+    const body = {
+      text,
+      run_id,
+      ...operation === "watermark" ? { slop_removal } : { operation },
+      ...operation === "humanize" ? { watermark_removal } : {},
+      ...operation === "compare" ? { candidate_text } : {}
+    };
     const headers = this.#headers();
-    const hash = (0, import_node_crypto.createHash)("sha256").update(JSON.stringify([text, slop_removal])).digest("hex");
+    const identity = operation === "watermark" ? [text, slop_removal] : ["text-tools-v1", operation, text, operation === "humanize" ? watermark_removal : false, operation === "compare" ? candidate_text : null];
+    const hash = (0, import_node_crypto.createHash)("sha256").update(JSON.stringify(identity)).digest("hex");
     const prior = this.#jobs.get(run_id);
     if (prior) {
       if (prior.hash !== hash) throw new ClientError("This request ID belongs to different input.");
@@ -21521,7 +21535,7 @@ var RewriteClient = class {
         method: "POST",
         headers,
         redirect: "error",
-        body: JSON.stringify({ text, slop_removal, run_id }),
+        body: JSON.stringify(body),
         signal: AbortSignal.any([controller.signal, AbortSignal.timeout(35 * 60 * 1e3)])
       });
     } catch {
@@ -21605,8 +21619,8 @@ function safeCode(value) {
 }
 
 // src/index.mjs
-var instructions = "Use this service only when the user asks to rewrite their text or reduce a text watermark. start_rewrite sends the supplied text to painintheagent.com and consumes the account's shared free quota on success. Save the run_id and use get_rewrite; do not retry by starting a new run. Keep this MCP process open during processing. Review the returned text and fidelity notes before publishing. It cannot verify Claude or Gemini private watermark keys.";
-var server = new McpServer({ name: "painintheagent-mcp", version: "0.1.0" }, { instructions });
+var instructions = "Use this service only for text operations the user requests: rewriting, humanizing, comparing versions or checking AI writing signals. Every successful operation uses one shared account run across the website, API and MCP. Save the run_id and read get_result instead of starting another request. Keep this MCP process open during processing. The service cannot verify private vendor watermarks or prove authorship. Show source notes and quoted style evidence with results.";
+var server = new McpServer({ name: "painintheagent-mcp", version: "0.2.0" }, { instructions });
 var client;
 var api = () => client ??= new RewriteClient();
 var runId = external_exports.string().uuid().describe("The run_id returned by start_rewrite. Reuse it to retrieve that run.");
@@ -21641,6 +21655,32 @@ server.registerTool("get_limits", {
   inputSchema: {},
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true }
 }, () => result(() => api().limits()));
+var textSchema = external_exports.string().min(100).max(2e4).describe("100\u201310,000 Unicode characters of prose the user asked to process.");
+var startAnnotations = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true };
+server.registerTool("start_humanize", {
+  title: "Humanize AI writing",
+  description: "Make targeted style edits with source checks. Optional watermark_removal adds deep rewriting. Uses one shared run, stores submitted text, and returns a run_id. Read with get_result. No private watermark guarantee.",
+  inputSchema: { text: textSchema, watermark_removal: external_exports.boolean().default(false), run_id: runId.optional() },
+  annotations: startAnnotations
+}, (input) => result(() => api().start({ ...input, operation: "humanize" })));
+server.registerTool("start_watermark_comparison", {
+  title: "Compare a source and rewrite",
+  description: "Compare source_text and candidate_text for meaning changes. Uses one shared run and stores both supplied texts. This does not detect Claude or Gemini private watermarks. Read with get_result.",
+  inputSchema: { source_text: textSchema, candidate_text: textSchema, run_id: runId.optional() },
+  annotations: startAnnotations
+}, (input) => result(() => api().start({ text: input.source_text, candidate_text: input.candidate_text, run_id: input.run_id, operation: "compare" })));
+server.registerTool("start_ai_detection", {
+  title: "Check AI writing signals",
+  description: "Inspect at least 80 words of English or Russian prose for AI-like writing patterns. Shows quoted evidence, not a calibrated authorship probability. Uses one shared run and stores the text. Read with get_result.",
+  inputSchema: { text: textSchema, run_id: runId.optional() },
+  annotations: startAnnotations
+}, (input) => result(() => api().start({ ...input, operation: "detect-ai" })));
+server.registerTool("get_result", {
+  title: "Read a text tool result",
+  description: "Read progress or a result by run_id for any text tool. Never starts model work or uses another run.",
+  inputSchema: { run_id: runId },
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true }
+}, ({ run_id }) => result(() => api().get(run_id)));
 server.connect(new StdioServerTransport()).catch(() => {
   process.stderr.write("MCP startup failed. Check the installation.\n");
   process.exit(1);

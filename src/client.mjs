@@ -64,12 +64,23 @@ export class RewriteClient {
 
   async limits() { return this.#read("/api/v1/watermark/limits"); }
 
-  async start({ text, slop_removal = false, run_id = randomUUID() }) {
+  async start(input) {
+    const { text, slop_removal = false, run_id = randomUUID(), operation = "watermark", watermark_removal = false, candidate_text } = input;
     if (typeof text !== "string" || Array.from(text).length < 100 || Array.from(text).length > 10_000 || !text.trim()) throw new ClientError("Supply 100–10,000 characters of text. Long documents are not split automatically.");
     if (!UUID.test(run_id)) throw new ClientError("run_id must be a lowercase UUID.");
     if (typeof slop_removal !== "boolean") throw new ClientError("slop_removal must be a boolean.");
+    if (!["watermark", "humanize", "compare", "detect-ai"].includes(operation)) throw new ClientError("Choose a supported text operation.");
+    if (typeof watermark_removal !== "boolean") throw new ClientError("watermark_removal must be a boolean.");
+    if (operation === "compare" && (typeof candidate_text !== "string" || !candidate_text.trim() || Array.from(candidate_text).length < 100 || Array.from(candidate_text).length > 10_000)) throw new ClientError("Supply a candidate_text of 100–10,000 characters.");
+    if (operation === "detect-ai" && (text.match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*/gu) ?? []).length < 80) throw new ClientError("AI analysis requires at least 80 words of English or Russian prose.");
+    if (Object.hasOwn(input, "candidate_text") && operation !== "compare" || Object.hasOwn(input, "watermark_removal") && operation !== "humanize"
+        || Object.hasOwn(input, "slop_removal") && operation !== "watermark") throw new ClientError("Use only the options for the selected text operation.");
+    const body = { text, run_id, ...(operation === "watermark" ? { slop_removal } : { operation }),
+      ...(operation === "humanize" ? { watermark_removal } : {}), ...(operation === "compare" ? { candidate_text } : {}) };
     const headers = this.#headers();
-    const hash = createHash("sha256").update(JSON.stringify([text, slop_removal])).digest("hex");
+    const identity = operation === "watermark" ? [text, slop_removal]
+      : ["text-tools-v1", operation, text, operation === "humanize" ? watermark_removal : false, operation === "compare" ? candidate_text : null];
+    const hash = createHash("sha256").update(JSON.stringify(identity)).digest("hex");
     const prior = this.#jobs.get(run_id);
     if (prior) {
       if (prior.hash !== hash) throw new ClientError("This request ID belongs to different input.");
@@ -89,7 +100,7 @@ export class RewriteClient {
     let response;
     try {
       response = await this.#fetch(`${this.#base}/api/v1/watermark/run`, {
-        method: "POST", headers, redirect: "error", body: JSON.stringify({ text, slop_removal, run_id }),
+        method: "POST", headers, redirect: "error", body: JSON.stringify(body),
         signal: AbortSignal.any([controller.signal, AbortSignal.timeout(35 * 60 * 1000)]),
       });
     } catch {

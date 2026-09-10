@@ -15,7 +15,8 @@ MCP server. Do not register the HTTPS REST API as an HTTP MCP server.
    provides a local gateway, forward that value too. Never switch endpoints
    or credentials after a failure.
 6. Restart the client or its MCP connection. Confirm that `start_rewrite`,
-   `get_rewrite` and `get_limits` are listed. `get_limits` verifies access
+   `start_humanize`, `start_watermark_comparison`, `start_ai_detection`,
+   `get_result`, `get_rewrite` and `get_limits` are listed. `get_limits` verifies access
    without starting a model run.
 
 For a processing test, use only the text the user explicitly asks to submit.

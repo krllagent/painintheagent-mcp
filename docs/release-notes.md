@@ -1,8 +1,5 @@
-Initial MCP client for the free Pain in the Agent text watermark rewrite service.
+Version 0.2.0 adds the AI Humanizer, watermark text comparison and AI writing detector to the existing rewrite client. All tools use the same confirmed account and shared allowance as the website.
 
-- `start_rewrite`, `get_rewrite` and `get_limits` use the same hosted pipeline and free account quota as the web tool.
-- Repeated request IDs retrieve an existing run without starting new model work.
-- The MCPB includes its Node dependencies. Codex and Claude Code plugin packages are included in the source repository.
-- Requires a free account key from https://painintheagent.com/integrations/ and Node.js 22 or later. Keep the client open during a rewrite.
+New tools: `start_humanize`, `start_watermark_comparison`, `start_ai_detection` and `get_result`. Existing rewrite calls and IDs remain compatible. The client rejects cross-tool ID reuse and preserves configured gateway routing without automatic POST retries.
 
-Validated with fictional text against a local HTTP service, actual API handlers and SQLite, including a browser-created key and a fresh MCP stdio process. No live-provider run was made for this client release. The client does not verify private watermark keys or guarantee detector results.
+Validated with fictional text over local HTTP and a fresh bundled MCP stdio process. No paid provider calls are needed for the client tests. AI writing signals describe style; they do not prove authorship or verify private vendor watermarks.

@@ -17,7 +17,8 @@ test("fresh bundled installation speaks MCP over stdio and rewrites through loca
       const chunks = [];
       for await (const chunk of req) chunks.push(chunk);
       const body = JSON.parse(Buffer.concat(chunks).toString());
-      assert.equal(body.slop_removal, false);
+      if (!body.operation) assert.equal(body.slop_removal, false);
+      else assert.equal(Object.hasOwn(body, "slop_removal"), false);
       res.writeHead(200, { "Content-Type": "application/x-ndjson" });
       res.write('{"type":"progress","stage":"semantic-audit"}\n');
       setTimeout(() => res.end('{"type":"result","text":"A fictional rewritten paragraph.","review":[],"runs_used":1}\n'), 50);
@@ -36,7 +37,7 @@ test("fresh bundled installation speaks MCP over stdio and rewrites through loca
   transport.stderr?.on("data", (chunk) => { stderr += chunk; });
   try {
     await client.connect(transport);
-    assert.deepEqual((await client.listTools()).tools.map((tool) => tool.name).sort(), ["get_limits", "get_rewrite", "start_rewrite"]);
+    assert.deepEqual((await client.listTools()).tools.map((tool) => tool.name).sort(), ["get_limits", "get_result", "get_rewrite", "start_ai_detection", "start_humanize", "start_rewrite", "start_watermark_comparison"]);
     const limits = await client.callTool({ name: "get_limits", arguments: {} });
     assert.equal(limits.structuredContent.runs_limit, 100);
     const started = await client.callTool({ name: "start_rewrite", arguments: { text: "A fictional local test paragraph with enough length to verify the protocol. The supplier is expected to deliver next week if the small trial succeeds." } });
@@ -45,6 +46,15 @@ test("fresh bundled installation speaks MCP over stdio and rewrites through loca
     const finished = await client.callTool({ name: "get_rewrite", arguments: { run_id: id } });
     assert.equal(finished.structuredContent.status, "success");
     assert.equal(posts, 1);
+    const text = "A fictional local test paragraph with enough length to verify the protocol. The supplier is expected to deliver next week if the small trial succeeds. ";
+    for (const [name, args] of [["start_humanize", { text, watermark_removal: true }], ["start_watermark_comparison", { source_text: text, candidate_text: text + " The comparison candidate." }], ["start_ai_detection", { text: text.repeat(4) }]]) {
+      const queued = await client.callTool({ name, arguments: args });
+      assert.notEqual(queued.isError, true);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const result = await client.callTool({ name: "get_result", arguments: { run_id: queued.structuredContent.run_id } });
+      assert.equal(result.structuredContent.status, "success");
+    }
+    assert.equal(posts, 4);
     assert.equal(stderr, "");
   } finally {
     await client.close();

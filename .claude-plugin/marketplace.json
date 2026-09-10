@@ -1,5 +1,14 @@
 {
   "name": "painintheagent",
-  "owner": { "name": "Kirill Balakhonov" },
-  "plugins": [{ "name": "painintheagent-mcp", "source": "./claude-plugins/painintheagent-mcp", "description": "Text watermark rewrites with fidelity checks", "version": "0.1.0" }]
+  "owner": {
+    "name": "Kirill Balakhonov"
+  },
+  "plugins": [
+    {
+      "name": "painintheagent-mcp",
+      "source": "./claude-plugins/painintheagent-mcp",
+      "description": "Text watermark rewrites with fidelity checks",
+      "version": "0.2.0"
+    }
+  ]
 }
