@@ -1,6 +1,6 @@
 # Pain in the Agent MCP
 
-Use the [Pain in the Agent text tools](https://painintheagent.com/tools/) from an AI client: remove text watermarks, humanize drafts, compare versions or check AI writing. Rewrites use the characters of your account's monthly plan: $5 a month for 100,000 characters, up to 10,000 per text, shared with the website and the remote MCP. Only a successful changed result is charged. Comparisons and AI checks are free and limited to 100 a day. The website's free tries (3 per browser) do not apply to the API or this client.
+Use the [Pain in the Agent text tools](https://painintheagent.com/tools/) from an AI client: remove text watermarks, humanize drafts, compare versions or check AI writing. Rewrites use the characters of your account's monthly plan: $5 a month for 100,000 characters, up to 10,000 per text, shared with the website and the remote MCP. Only a successful changed result is charged. Comparisons and AI checks are free and limited to 100 a day; without a plan they take texts of up to 1,000 characters, with it up to 10,000. The website's free tries (3 per browser) do not apply to the API or this client.
 
 The [research and examples](https://painintheagent.com/blog/text-watermark-removal-retest/) describe tests of rewrite methods against reference SynthID Text watermarks. Those measurements are separate from the live tool workflow. This client cannot verify Claude or Gemini's private watermark keys. AI writing signals are experimental style observations, not proof of authorship.
 

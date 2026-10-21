@@ -21739,8 +21739,8 @@ function safeCode(value) {
 }
 
 // src/index.mjs
-var instructions = "Use this service only for text operations the user asks for: removing a text watermark, humanizing, comparing two versions or checking for AI writing. start_rewrite and start_humanize use characters from the account's monthly plan ($5 a month for 100,000 characters, shared with the website and the remote MCP); only a successful changed result is charged. Comparisons and AI checks are free and count toward a separate limit of 100 checks a day. Save the run_id and read get_result instead of starting another request. Keep this MCP process open while a run works. The ChatGPT, Claude and Gemini watermark detectors are not public, so complete removal cannot be verified.";
-var server = new McpServer({ name: "painintheagent-mcp", version: "0.3.0" }, { instructions });
+var instructions = "Use this service only for text operations the user asks for: removing a text watermark, humanizing, comparing two versions or checking for AI writing. start_rewrite and start_humanize use characters from the account's monthly plan ($5 a month for 100,000 characters, shared with the website and the remote MCP); only a successful changed result is charged. Comparisons and AI checks are free and count toward a separate limit of 100 checks a day; without a plan they take texts of up to 1,000 characters. Save the run_id and read get_result instead of starting another request. Keep this MCP process open while a run works. The ChatGPT, Claude and Gemini watermark detectors are not public, so complete removal cannot be verified.";
+var server = new McpServer({ name: "painintheagent-mcp", version: "0.3.1" }, { instructions });
 var client;
 var api = () => client ??= new RewriteClient();
 var runId = external_exports.string().uuid().describe("The run_id returned by start_rewrite. Reuse it to retrieve that run.");
@@ -21785,13 +21785,13 @@ server.registerTool("start_humanize", {
 }, (input) => result(() => api().start({ ...input, operation: "humanize" })));
 server.registerTool("start_watermark_comparison", {
   title: "Compare a source and rewrite",
-  description: "Compare source_text and candidate_text for meaning changes. This does not detect ChatGPT, Claude or Gemini watermarks. Free: counts toward the separate daily limit of checks, not the character allowance. Stores both texts. Read with get_result.",
+  description: "Compare source_text and candidate_text for meaning changes. This does not detect ChatGPT, Claude or Gemini watermarks. Free: counts toward the separate daily limit of checks, not the character allowance. Without a plan it takes texts of up to 1,000 characters; with the plan, up to 10,000. Stores both texts. Read with get_result.",
   inputSchema: { source_text: textSchema, candidate_text: textSchema, run_id: runId.optional() },
   annotations: startAnnotations
 }, (input) => result(() => api().start({ text: input.source_text, candidate_text: input.candidate_text, run_id: input.run_id, operation: "compare" })));
 server.registerTool("start_ai_detection", {
   title: "Check for AI writing",
-  description: "Score prose with a trained AI detector (0-100) and highlight AI-writing patterns with quoted passages. At least 80 words; fullest coverage for English. Results do not prove authorship. Free: counts toward the separate daily limit of checks, not the character allowance. Stores the text. Read with get_result.",
+  description: "Score prose with a trained AI detector (0-100) and highlight AI-writing patterns with quoted passages. At least 80 words; fullest coverage for English. Results do not prove authorship. Free: counts toward the separate daily limit of checks, not the character allowance. Without a plan it takes texts of up to 1,000 characters; with the plan, up to 10,000. Stores the text. Read with get_result.",
   inputSchema: { text: textSchema, run_id: runId.optional() },
   annotations: startAnnotations
 }, (input) => result(() => api().start({ ...input, operation: "detect-ai" })));

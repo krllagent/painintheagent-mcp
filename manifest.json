@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "painintheagent-mcp",
   "display_name": "Pain in the Agent",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Remove text watermarks, humanize and check AI writing with your Pain in the Agent account.",
   "author": {
     "name": "Kirill Balakhonov",

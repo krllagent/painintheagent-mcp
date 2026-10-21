@@ -26,7 +26,8 @@ detectors are not public, so complete removal cannot be verified, and a rewrite 
 For humanizing, use `start_humanize` with the text; it always removes the watermark too.
 For comparison, use `start_watermark_comparison` with source_text and candidate_text.
 For an AI writing check, use `start_ai_detection` with at least 80 words.
-Rewrites use characters from the plan; comparisons and AI checks are free within 100 a day.
+Rewrites use characters from the plan; comparisons and AI checks are free within 100 a day,
+for texts of up to 1,000 characters without a plan (10,000 with it).
 Use get_result (or get_rewrite) with the returned run_id. Show the score and quoted evidence,
 and explain that they do not prove who wrote the passage.
 

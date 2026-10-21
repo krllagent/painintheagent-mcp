@@ -1,6 +1,6 @@
 {
   "name": "painintheagent-mcp",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "module",
   "description": "MCP client for the Pain in the Agent text tools: watermark removal, humanizing and AI detection",
   "license": "MIT",
