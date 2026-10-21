@@ -3,7 +3,7 @@
   "name": "io.github.krllagent/painintheagent-mcp",
   "title": "Pain in the Agent",
   "description": "Remove text watermarks, humanize and check AI writing with your Pain in the Agent account.",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "websiteUrl": "https://painintheagent.com/integrations/",
   "repository": {
     "url": "https://github.com/krllagent/painintheagent-mcp",
@@ -12,8 +12,8 @@
   "packages": [
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/krllagent/painintheagent-mcp/releases/download/v0.3.1/painintheagent-mcp-0.3.1.mcpb",
-      "fileSha256": "e3df49063e921f6b1d6e3ce17be01d0ce5c67f80e48767fd1e461445042a39e6",
+      "identifier": "https://github.com/krllagent/painintheagent-mcp/releases/download/v0.3.2/painintheagent-mcp-0.3.2.mcpb",
+      "fileSha256": "a07e7ff52758a151a8a6648098fee6a31dcf4b8db92fd82bdcd8be9f63aa6e45",
       "transport": {
         "type": "stdio"
       }

@@ -1,3 +1,5 @@
+Version 0.3.2 requires patched Node.js releases (22.23.4, 24.22.1 or 26.12.1 and later within those supported lines), refreshes transitive dependencies and rebuilds the distributed bundles. Tool operations and billing behavior are unchanged.
+
 Version 0.3.1 states the detector length limit: without a monthly plan, comparisons and AI checks take texts of up to 1,000 characters through the API and this client, as on the website; with the plan, up to 10,000. Nothing else changes.
 
 Version 0.3.0 describes the current offer and updates the MCP SDK. Rewrites (`start_rewrite`, `start_humanize`) use the characters of the account's monthly plan: $5 a month for 100,000 characters, up to 10,000 per text, shared with the website and the remote MCP. Comparisons and AI checks are free within 100 a day. Tool descriptions, the README, the plugin skill and the API reference now say so; earlier versions described a free allowance of runs.
