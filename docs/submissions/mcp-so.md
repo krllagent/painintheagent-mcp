@@ -1,3 +1,5 @@
+> Submitted on September 7, 2026 and kept as sent. It describes the offer of that time; since October 2026 rewrites need the $5 monthly plan (see README).
+
 Please add Pain in the Agent MCP to the server directory.
 
 - **Repository:** https://github.com/krllagent/painintheagent-mcp

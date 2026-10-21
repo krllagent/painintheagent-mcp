@@ -1,7 +1,7 @@
 {
   "name": "painintheagent-mcp",
-  "version": "0.2.0",
-  "description": "Humanize, rewrite and analyze prose with the shared Pain in the Agent allowance.",
+  "version": "0.3.0",
+  "description": "Remove text watermarks, humanize and check AI writing with your Pain in the Agent account.",
   "author": {
     "name": "Kirill Balakhonov",
     "url": "https://painintheagent.com/about/"
@@ -9,8 +9,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Pain in the Agent",
-    "shortDescription": "Humanizing, rewriting and AI writing checks",
-    "longDescription": "Use the text tools from painintheagent.com with the same confirmed account. Humanize writing, rewrite text watermarks, compare versions or inspect AI writing signals. All tools share one allowance; the results do not prove authorship or verify private vendor watermarks.",
+    "shortDescription": "Watermark removal, humanizing and AI writing checks",
+    "longDescription": "Use the text tools from painintheagent.com with your account key. Remove text watermarks, humanize drafts, compare versions or check AI writing. Rewrites use the characters of the $5 monthly plan (100,000 a month, shared with the website); comparisons and AI checks are free within 100 a day. Results do not prove authorship, and complete watermark removal cannot be verified.",
     "developerName": "Kirill Balakhonov",
     "category": "Productivity",
     "capabilities": [

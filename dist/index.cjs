@@ -3337,6 +3337,37 @@ var require_utils = __commonJS({
       }
       return output.join("");
     }
+    function removeDotSegmentsRelative(path) {
+      if (path === "" || path[0] === "/") {
+        return removeDotSegments(path);
+      }
+      const segments = path.split("/");
+      const last = segments.length - 1;
+      const output = [];
+      let trailingDirectory = false;
+      for (let i = 0; i <= last; i++) {
+        const segment = segments[i];
+        if (segment === "." || segment === "..") {
+          if (segment === "..") {
+            if (output.length !== 0 && output[output.length - 1] !== "..") {
+              output.pop();
+            } else {
+              output.push("..");
+            }
+          }
+          trailingDirectory = i === last;
+        } else {
+          output.push(segment);
+        }
+      }
+      if (trailingDirectory && output[output.length - 1] !== "..") {
+        output.push("");
+      }
+      if (output.length === 0 || output[0] === "" || output[0].includes(":")) {
+        output.unshift(".");
+      }
+      return output.join("/");
+    }
     var HOST_DELIMS = { "@": "%40", "/": "%2F", "?": "%3F", "#": "%23", ":": "%3A" };
     var HOST_DELIM_RE = /[@/?#:]/g;
     var HOST_DELIM_NO_COLON_RE = /[@/?#]/g;
@@ -3597,6 +3628,7 @@ var require_utils = __commonJS({
       encodeFragment,
       escapePreservingEscapes,
       removeDotSegments,
+      removeDotSegmentsRelative,
       isIPv4,
       isUUID,
       normalizeIPv6,
@@ -3820,16 +3852,18 @@ var require_schemes = __commonJS({
 var require_fast_uri = __commonJS({
   "node_modules/fast-uri/index.js"(exports2, module2) {
     "use strict";
-    var { normalizeIPv6, removeDotSegments, recomposeAuthority, normalizePercentEncoding, normalizePathEncoding, serializePathEncoding, normalizeQueryFragmentEncoding, encodeQuery, encodeFragment, reescapeHostDelimiters, isIPv4, nonSimpleDomain } = require_utils();
+    var { normalizeIPv6, removeDotSegments, removeDotSegmentsRelative, recomposeAuthority, normalizePercentEncoding, normalizePathEncoding, serializePathEncoding, normalizeQueryFragmentEncoding, encodeQuery, encodeFragment, reescapeHostDelimiters, isIPv4, nonSimpleDomain } = require_utils();
     var { SCHEMES, getSchemeHandler } = require_schemes();
     var VALID_SCHEME = /^[A-Za-z][A-Za-z0-9+.-]*$/u;
     var MALFORMED_SCHEME_ERROR = "URI scheme is malformed.";
-    function decodeValidScheme(scheme) {
-      const decodedScheme = unescape(String(scheme));
-      if (!VALID_SCHEME.test(decodedScheme)) {
+    var MALFORMED_HOST_ERROR = "URI host is malformed.";
+    var FORBIDDEN_DOMAIN_HOST_CHARACTER = /[\0-\x20"#/:<>?@[\\\]^`{|}\x7F]/u;
+    function validateScheme(scheme) {
+      const stringScheme = String(scheme);
+      if (!VALID_SCHEME.test(stringScheme)) {
         throw new TypeError(MALFORMED_SCHEME_ERROR);
       }
-      return decodedScheme;
+      return stringScheme;
     }
     function normalize(uri, options) {
       if (typeof uri === "string") {
@@ -3866,6 +3900,9 @@ var require_fast_uri = __commonJS({
       const resolvedSchemeHandler = getSchemeHandler(options && options.scheme || resolved.scheme);
       const resolvedHost = resolved.host;
       const resolvedHostIsIP = resolvedHost !== void 0 && resolvedHost !== "" && (isIPv4(resolvedHost) || normalizeIPv6(resolvedHost).isIPV6);
+      if (hasForbiddenDomainHost(resolved, options || {}, resolvedSchemeHandler, resolvedHostIsIP)) {
+        throw new Error(MALFORMED_HOST_ERROR);
+      }
       canonicalizeHost(resolved, options || {}, resolvedSchemeHandler, resolvedHostIsIP);
       const encodedASCIIHost = resolvedHost && resolvedHost.indexOf("%") !== -1 && !new RegExp("\\P{ASCII}", "u").test(resolvedHost);
       if (resolved.error && !encodedASCIIHost) {
@@ -3907,14 +3944,15 @@ var require_fast_uri = __commonJS({
             if (relative.path[0] === "/") {
               target.path = removeDotSegments(relative.path);
             } else {
-              if ((base.userinfo !== void 0 || base.host !== void 0 || base.port !== void 0) && !base.path) {
+              const baseHasAuthority = base.userinfo !== void 0 || base.host !== void 0 || base.port !== void 0;
+              if (baseHasAuthority && !base.path) {
                 target.path = "/" + relative.path;
               } else if (!base.path) {
                 target.path = relative.path;
               } else {
                 target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative.path;
               }
-              target.path = removeDotSegments(target.path);
+              target.path = base.scheme === void 0 && !baseHasAuthority && target.path[0] !== "/" ? removeDotSegmentsRelative(target.path) : removeDotSegments(target.path);
             }
             target.query = relative.query;
           }
@@ -3952,12 +3990,13 @@ var require_fast_uri = __commonJS({
       const options = Object.assign({}, opts);
       const uriTokens = [];
       if (component.scheme) {
-        component.scheme = decodeValidScheme(component.scheme);
+        component.scheme = validateScheme(component.scheme);
       }
       const schemeHandler = getSchemeHandler(options.scheme || component.scheme);
       if (schemeHandler && schemeHandler.serialize) schemeHandler.serialize(component, options);
       const hasAuthority = component.userinfo !== void 0 || component.host !== void 0 || component.port !== void 0;
-      const pathNoScheme = !options.skipEscape && component.scheme === void 0 && !hasAuthority;
+      const schemelessReference = (component.scheme === void 0 || options.reference === "suffix") && !hasAuthority;
+      const pathNoScheme = !options.skipEscape && schemelessReference;
       if (component.path !== void 0) {
         if (!options.skipEscape) {
           component.path = serializePathEncoding(component.path, pathNoScheme);
@@ -3966,7 +4005,7 @@ var require_fast_uri = __commonJS({
         }
       }
       if (options.reference !== "suffix" && component.scheme) {
-        component.scheme = decodeValidScheme(component.scheme);
+        component.scheme = validateScheme(component.scheme);
         uriTokens.push(component.scheme, ":");
       }
       const authority = recomposeAuthority(component);
@@ -3982,9 +4021,9 @@ var require_fast_uri = __commonJS({
       if (component.path !== void 0) {
         let s = component.path;
         if (!options.absolutePath && (!schemeHandler || !schemeHandler.absolutePath)) {
-          s = removeDotSegments(s);
+          s = schemelessReference && s[0] !== "/" ? removeDotSegmentsRelative(s) : removeDotSegments(s);
         }
-        if (pathNoScheme) {
+        if (schemelessReference) {
           s = serializePathEncoding(s, true);
         }
         if (authority === void 0 && s[0] === "/" && s[1] === "/") {
@@ -4031,15 +4070,33 @@ var require_fast_uri = __commonJS({
       return hasMalformedPercentEncoding(matches[3]) || host !== void 0 && !isIPLiteral(host) && hasMalformedPercentEncoding(host) || hasMalformedPercentEncoding(matches[6]) || hasMalformedPercentEncoding(matches[7]) || hasMalformedPercentEncoding(matches[8]);
     }
     function canonicalizeHost(parsed, options, schemeHandler, isIP) {
+      if (hasForbiddenDomainHost(parsed, options, schemeHandler, isIP)) {
+        parsed.error = parsed.error || MALFORMED_HOST_ERROR;
+        return true;
+      }
       if (!options.unicodeSupport && (!schemeHandler || !schemeHandler.unicodeSupport) && parsed.host && !isIPLiteral(parsed.host) && (options.domainHost || schemeHandler && schemeHandler.domainHost) && isIP === false && nonSimpleDomain(parsed.host)) {
+        let url;
         try {
-          parsed.host = new URL("http://" + parsed.host).hostname;
+          url = new URL("http://" + parsed.host);
         } catch (e) {
           parsed.error = parsed.error || "Host's domain name can not be converted to ASCII: " + e;
           return true;
         }
+        if (!isHostOnlyURL(url)) {
+          parsed.error = parsed.error || MALFORMED_HOST_ERROR;
+          return true;
+        }
+        parsed.host = url.hostname;
       }
       return false;
+    }
+    function hasForbiddenDomainHost(parsed, options, schemeHandler, isIP) {
+      return Boolean(
+        parsed.host && isIP === false && !isIPLiteral(parsed.host) && (options.domainHost || schemeHandler && schemeHandler.domainHost) && FORBIDDEN_DOMAIN_HOST_CHARACTER.test(parsed.host)
+      );
+    }
+    function isHostOnlyURL(url) {
+      return url.username === "" && url.password === "" && url.port === "" && url.pathname === "/" && url.search === "" && url.hash === "" && url.hostname !== "";
     }
     function parseWithStatus(uri, opts) {
       const options = Object.assign({}, opts);
@@ -4095,9 +4152,8 @@ var require_fast_uri = __commonJS({
         parsed.query = matches[7];
         parsed.fragment = matches[8];
         if (parsed.scheme !== void 0) {
-          const decodedScheme = unescape(parsed.scheme);
-          if (VALID_SCHEME.test(decodedScheme)) {
-            parsed.scheme = decodedScheme.toLowerCase();
+          if (VALID_SCHEME.test(parsed.scheme)) {
+            parsed.scheme = parsed.scheme.toLowerCase();
           } else {
             parsed.error = parsed.error || MALFORMED_SCHEME_ERROR;
             malformedScheme = true;
@@ -4125,7 +4181,7 @@ var require_fast_uri = __commonJS({
             malformedIPLiteral = hasIPLiteralBracket && (!bracketedIPLiteral || ipv6result.error === true);
             parsed.host = isIP ? ipv6result.host : ipv6result.host.toLowerCase();
             if (malformedIPLiteral) {
-              parsed.error = parsed.error || "URI host is malformed.";
+              parsed.error = parsed.error || MALFORMED_HOST_ERROR;
               malformedAuthorityOrPort = true;
             }
           } else {
@@ -4148,13 +4204,14 @@ var require_fast_uri = __commonJS({
         if (!malformedIPLiteral) {
           malformedHost = canonicalizeHost(parsed, options, schemeHandler, isIP);
         }
-        if (!schemeHandler || schemeHandler && !schemeHandler.skipNormalize) {
-          if (uri.indexOf("%") !== -1) {
-            if (parsed.host !== void 0 && !malformedIPLiteral) {
-              const host = isIP ? parsed.host : normalizePercentEncoding(parsed.host, true);
-              parsed.host = reescapeHostDelimiters(host, isIP);
-            }
+        if (uri.indexOf("%") !== -1 && parsed.host !== void 0 && !malformedIPLiteral) {
+          let host = isIP ? parsed.host : normalizePercentEncoding(parsed.host, true);
+          if (!isIP) {
+            host = normalizePercentEncoding(host.toLowerCase());
           }
+          parsed.host = isIP || options.scheme !== "null" ? reescapeHostDelimiters(host, isIP) : host;
+        }
+        if (!schemeHandler || schemeHandler && !schemeHandler.skipNormalize) {
           if (parsed.path) {
             parsed.path = normalizePathEncoding(parsed.path);
           }
@@ -18846,6 +18903,9 @@ var Protocol = class {
       this.setRequestHandler(GetTaskPayloadRequestSchema, async (request, extra) => {
         const handleTaskResult = async () => {
           const taskId = request.params.taskId;
+          if (!await this._taskStore.getTask(taskId, extra.sessionId)) {
+            throw new McpError(ErrorCode.InvalidParams, `Task not found: ${taskId}`);
+          }
           if (this._taskMessageQueue) {
             let queuedMessage;
             while (queuedMessage = await this._taskMessageQueue.dequeue(taskId, extra.sessionId)) {
@@ -18876,12 +18936,12 @@ var Protocol = class {
             throw new McpError(ErrorCode.InvalidParams, `Task not found: ${taskId}`);
           }
           if (!isTerminal(task.status)) {
-            await this._waitForTaskUpdate(taskId, extra.signal);
+            await this._waitForTaskUpdate(taskId, extra.signal, extra.sessionId);
             return await handleTaskResult();
           }
           if (isTerminal(task.status)) {
             const result2 = await this._taskStore.getTaskResult(taskId, extra.sessionId);
-            this._clearTaskQueue(taskId);
+            this._clearTaskQueue(taskId, extra.sessionId);
             return {
               ...result2,
               _meta: {
@@ -18918,7 +18978,7 @@ var Protocol = class {
             throw new McpError(ErrorCode.InvalidParams, `Cannot cancel task in terminal status: ${task.status}`);
           }
           await this._taskStore.updateTaskStatus(request.params.taskId, "cancelled", "Client cancelled task execution.", extra.sessionId);
-          this._clearTaskQueue(request.params.taskId);
+          this._clearTaskQueue(request.params.taskId, extra.sessionId);
           const cancelledTask = await this._taskStore.getTask(request.params.taskId, extra.sessionId);
           if (!cancelledTask) {
             throw new McpError(ErrorCode.InvalidParams, `Task not found after cancellation: ${request.params.taskId}`);
@@ -19046,6 +19106,19 @@ var Protocol = class {
     const handler = this._requestHandlers.get(request.method) ?? this.fallbackRequestHandler;
     const capturedTransport = this._transport;
     const relatedTaskId = request.params?._meta?.[RELATED_TASK_META_KEY]?.taskId;
+    const sessionId = capturedTransport?.sessionId;
+    const store = this._taskStore;
+    let relatedTaskFound = true;
+    let relatedTaskLookup;
+    if (relatedTaskId && store && this._taskMessageQueue && sessionId !== void 0) {
+      relatedTaskFound = false;
+      relatedTaskLookup = (async () => {
+        if (!await store.getTask(relatedTaskId, sessionId)) {
+          throw new McpError(ErrorCode.InvalidParams, `Task not found: ${relatedTaskId}`);
+        }
+        relatedTaskFound = true;
+      })();
+    }
     if (handler === void 0) {
       const errorResponse = {
         jsonrpc: "2.0",
@@ -19055,7 +19128,10 @@ var Protocol = class {
           message: "Method not found"
         }
       };
-      if (relatedTaskId && this._taskMessageQueue) {
+      if (relatedTaskId && relatedTaskLookup) {
+        const queuedError = { type: "error", message: errorResponse, timestamp: Date.now() };
+        relatedTaskLookup.then(() => this._enqueueTaskMessage(relatedTaskId, queuedError, sessionId), () => capturedTransport?.send(errorResponse)).catch((error2) => this._onerror(new Error(`Failed to send an error response: ${error2}`)));
+      } else if (relatedTaskId && this._taskMessageQueue) {
         this._enqueueTaskMessage(relatedTaskId, {
           type: "error",
           message: errorResponse,
@@ -19106,7 +19182,10 @@ var Protocol = class {
       closeSSEStream: extra?.closeSSEStream,
       closeStandaloneSSEStream: extra?.closeStandaloneSSEStream
     };
-    Promise.resolve().then(() => {
+    (relatedTaskLookup ?? Promise.resolve()).then(() => {
+      if (relatedTaskLookup && abortController.signal.aborted) {
+        throw new McpError(ErrorCode.ConnectionClosed, "Request was cancelled");
+      }
       if (taskCreationParams) {
         this.assertTaskHandlerCapability(request.method);
       }
@@ -19141,7 +19220,7 @@ var Protocol = class {
           ...error2["data"] !== void 0 && { data: error2["data"] }
         }
       };
-      if (relatedTaskId && this._taskMessageQueue) {
+      if (relatedTaskId && this._taskMessageQueue && relatedTaskFound) {
         await this._enqueueTaskMessage(relatedTaskId, {
           type: "error",
           message: errorResponse,
@@ -19621,7 +19700,7 @@ var Protocol = class {
       throw new Error("Cannot enqueue task message: taskStore and taskMessageQueue are not configured");
     }
     const maxQueueSize = this._options?.maxTaskQueueSize;
-    await this._taskMessageQueue.enqueue(taskId, message, sessionId, maxQueueSize);
+    await this._taskMessageQueue.enqueue(taskId, message, sessionId ?? this._transport?.sessionId, maxQueueSize);
   }
   /**
    * Clears the message queue for a task and rejects any pending request resolvers.
@@ -19650,12 +19729,13 @@ var Protocol = class {
    * Uses polling to check for updates at the task's configured poll interval.
    * @param taskId The task ID to wait for
    * @param signal Abort signal to cancel the wait
+   * @param sessionId Session of the request that waits, passed to the task store
    * @returns Promise that resolves when an update occurs or rejects if aborted
    */
-  async _waitForTaskUpdate(taskId, signal) {
+  async _waitForTaskUpdate(taskId, signal, sessionId) {
     let interval = this._options?.defaultTaskPollInterval ?? 1e3;
     try {
-      const task = await this._taskStore?.getTask(taskId);
+      const task = await this._taskStore?.getTask(taskId, sessionId);
       if (task?.pollInterval) {
         interval = task.pollInterval;
       }
@@ -20534,6 +20614,42 @@ var ExperimentalMcpServerTasks = class {
 };
 
 // node_modules/@modelcontextprotocol/sdk/dist/esm/server/mcp.js
+function toolInputElementCount(value, max) {
+  let count = 0;
+  const stack = [value];
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (node === null || typeof node !== "object")
+      continue;
+    if (Array.isArray(node)) {
+      for (const child of node) {
+        if (++count > max)
+          return count;
+        if (child !== null && typeof child === "object")
+          stack.push(child);
+      }
+    } else {
+      for (const key in node) {
+        if (!Object.prototype.hasOwnProperty.call(node, key))
+          continue;
+        if (++count > max)
+          return count;
+        const child = node[key];
+        if (child !== null && typeof child === "object")
+          stack.push(child);
+      }
+    }
+  }
+  return count;
+}
+function resolveMaxToolInputElements(value) {
+  if (value === void 0 || value === Infinity)
+    return void 0;
+  if (typeof value !== "number" || Number.isNaN(value) || value < 1) {
+    throw new RangeError(`maxToolInputElements must be a number of at least 1, or Infinity, got ${String(value)}`);
+  }
+  return value;
+}
 var McpServer = class {
   constructor(serverInfo, options) {
     this._registeredResources = {};
@@ -20545,6 +20661,7 @@ var McpServer = class {
     this._resourceHandlersInitialized = false;
     this._promptHandlersInitialized = false;
     this.server = new Server(serverInfo, options);
+    this._maxToolInputElements = resolveMaxToolInputElements(options?.maxToolInputElements);
   }
   /**
    * Access experimental features.
@@ -20675,12 +20792,15 @@ var McpServer = class {
    * Validates tool input arguments against the tool's input schema.
    */
   async validateToolInput(tool, args, toolName) {
+    if (this._maxToolInputElements !== void 0 && toolInputElementCount(args, this._maxToolInputElements) > this._maxToolInputElements) {
+      throw new McpError(ErrorCode.InvalidParams, `Invalid arguments for tool ${toolName}: arguments contain more than the maximum of ${this._maxToolInputElements} elements`);
+    }
     if (!tool.inputSchema) {
       return void 0;
     }
     const inputObj = normalizeObjectSchema(tool.inputSchema);
     const schemaToParse = inputObj ?? tool.inputSchema;
-    const parseResult = await safeParseAsync2(schemaToParse, args);
+    const parseResult = await safeParseAsync2(schemaToParse, args ?? {});
     if (!parseResult.success) {
       const error2 = "error" in parseResult ? parseResult.error : "Unknown error";
       const errorMessage = getParseErrorMessage(error2);
@@ -20918,7 +21038,7 @@ var McpServer = class {
       }
       if (prompt.argsSchema) {
         const argsObj = normalizeObjectSchema(prompt.argsSchema);
-        const parseResult = await safeParseAsync2(argsObj, request.params.arguments);
+        const parseResult = await safeParseAsync2(argsObj, request.params.arguments ?? {});
         if (!parseResult.success) {
           const error2 = "error" in parseResult ? parseResult.error : "Unknown error";
           const errorMessage = getParseErrorMessage(error2);
@@ -21619,8 +21739,8 @@ function safeCode(value) {
 }
 
 // src/index.mjs
-var instructions = "Use this service only for text operations the user requests: rewriting, humanizing, comparing versions or checking AI writing signals. Every successful operation uses one shared account run across the website, API and MCP. Save the run_id and read get_result instead of starting another request. Keep this MCP process open during processing. The service cannot verify private vendor watermarks or prove authorship. Show source notes and quoted style evidence with results.";
-var server = new McpServer({ name: "painintheagent-mcp", version: "0.2.0" }, { instructions });
+var instructions = "Use this service only for text operations the user asks for: removing a text watermark, humanizing, comparing two versions or checking for AI writing. start_rewrite and start_humanize use characters from the account's monthly plan ($5 a month for 100,000 characters, shared with the website and the remote MCP); only a successful changed result is charged. Comparisons and AI checks are free and count toward a separate limit of 100 checks a day. Save the run_id and read get_result instead of starting another request. Keep this MCP process open while a run works. The ChatGPT, Claude and Gemini watermark detectors are not public, so complete removal cannot be verified.";
+var server = new McpServer({ name: "painintheagent-mcp", version: "0.3.0" }, { instructions });
 var client;
 var api = () => client ??= new RewriteClient();
 var runId = external_exports.string().uuid().describe("The run_id returned by start_rewrite. Reuse it to retrieve that run.");
@@ -21634,50 +21754,50 @@ async function result(work) {
   }
 }
 server.registerTool("start_rewrite", {
-  title: "Start a text watermark rewrite",
-  description: "Rewrite 100\u201310,000 characters through Pain in the Agent, with fidelity checks. Sends text to the hosted service; successful runs use the shared free account quota. Returns a run_id promptly. Keep the MCP process open and call get_rewrite after 15 seconds. No private-key watermark guarantee. Use only for text the user asked to process.",
+  title: "Remove a text watermark",
+  description: "Rewrite 100\u201310,000 characters to remove a statistical text watermark: one rewrite by one model that is instructed to keep the meaning, structure and formatting. A successful changed result uses the input character count from the account's monthly plan; a rewrite that fails its checks is not charged. Returns a run_id promptly. Keep the MCP process open and call get_rewrite after 15 seconds. Complete removal cannot be verified. Use only for text the user asked to process.",
   inputSchema: {
     text: external_exports.string().min(100).max(2e4).describe("The complete text to rewrite. Do not include secrets or unrelated files."),
-    slop_removal: external_exports.boolean().default(false).describe("Also remove formulaic AI phrasing. Off by default."),
+    slop_removal: external_exports.boolean().default(false).describe("Accepted for compatibility; it has no effect."),
     run_id: runId.optional().describe("Optional lowercase UUID for idempotency. Reusing the same ID and input cannot start another model run.")
   },
   annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true }
 }, (input) => result(() => api().start(input)));
 server.registerTool("get_rewrite", {
   title: "Read rewrite progress or result",
-  description: "Read a previous run by its run_id. Does not start or retry model processing and does not consume rewrite quota. A pending result includes a suggested polling interval. Keep the existing process open while it works.",
+  description: "Read a previous run by its run_id. Never starts or retries model work and never uses characters. A pending result includes a suggested polling interval. Keep the existing process open while it works.",
   inputSchema: { run_id: runId },
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true }
 }, ({ run_id }) => result(() => api().get(run_id)));
 server.registerTool("get_limits", {
-  title: "Read the shared free account limits",
-  description: "Read this account's character limit and monthly successful-run usage, shared with the website. Does not rewrite text or consume rewrite quota. Running requests also reserve slots until they finish.",
+  title: "Read the account allowance",
+  description: "Read the account's character allowance shared with the website and the remote MCP: characters used and remaining in the paid month, the per-text limit and when the month ends. Does not use characters. Running requests reserve their characters until they finish.",
   inputSchema: {},
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true }
 }, () => result(() => api().limits()));
 var textSchema = external_exports.string().min(100).max(2e4).describe("100\u201310,000 Unicode characters of prose the user asked to process.");
 var startAnnotations = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true };
 server.registerTool("start_humanize", {
-  title: "Humanize AI writing",
-  description: "Make targeted style edits with source checks. Optional watermark_removal adds deep rewriting. Uses one shared run, stores submitted text, and returns a run_id. Read with get_result. No private watermark guarantee.",
-  inputSchema: { text: textSchema, watermark_removal: external_exports.boolean().default(false), run_id: runId.optional() },
+  title: "Humanize and remove the watermark",
+  description: "Humanize AI text and remove its statistical watermark by replacing the wording throughout, with source checks and before-and-after AI scores. A successful run uses the input character count from the account's monthly plan. Stores the submitted text and returns a run_id; read it with get_result. Complete watermark removal cannot be verified.",
+  inputSchema: { text: textSchema, watermark_removal: external_exports.boolean().default(false).describe("Accepted for compatibility; watermark-free rewriting is always included."), run_id: runId.optional() },
   annotations: startAnnotations
 }, (input) => result(() => api().start({ ...input, operation: "humanize" })));
 server.registerTool("start_watermark_comparison", {
   title: "Compare a source and rewrite",
-  description: "Compare source_text and candidate_text for meaning changes. Uses one shared run and stores both supplied texts. This does not detect Claude or Gemini private watermarks. Read with get_result.",
+  description: "Compare source_text and candidate_text for meaning changes. This does not detect ChatGPT, Claude or Gemini watermarks. Free: counts toward the separate daily limit of checks, not the character allowance. Stores both texts. Read with get_result.",
   inputSchema: { source_text: textSchema, candidate_text: textSchema, run_id: runId.optional() },
   annotations: startAnnotations
 }, (input) => result(() => api().start({ text: input.source_text, candidate_text: input.candidate_text, run_id: input.run_id, operation: "compare" })));
 server.registerTool("start_ai_detection", {
-  title: "Check AI writing signals",
-  description: "Inspect at least 80 words of English or Russian prose for AI-like writing patterns. Shows quoted evidence, not a calibrated authorship probability. Uses one shared run and stores the text. Read with get_result.",
+  title: "Check for AI writing",
+  description: "Score prose with a trained AI detector (0-100) and highlight AI-writing patterns with quoted passages. At least 80 words; fullest coverage for English. Results do not prove authorship. Free: counts toward the separate daily limit of checks, not the character allowance. Stores the text. Read with get_result.",
   inputSchema: { text: textSchema, run_id: runId.optional() },
   annotations: startAnnotations
 }, (input) => result(() => api().start({ ...input, operation: "detect-ai" })));
 server.registerTool("get_result", {
   title: "Read a text tool result",
-  description: "Read progress or a result by run_id for any text tool. Never starts model work or uses another run.",
+  description: "Read progress or a result by run_id for any text tool. Never starts model work or uses characters.",
   inputSchema: { run_id: runId },
   annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: true }
 }, ({ run_id }) => result(() => api().get(run_id)));

@@ -21,7 +21,7 @@ const manifest = {
   $schema: "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   name: "io.github.krllagent/painintheagent-mcp",
   title: "Pain in the Agent",
-  description: "Humanize, rewrite and analyze prose with one shared Pain in the Agent account allowance.",
+  description: "Remove text watermarks, humanize and check AI writing with your Pain in the Agent account.",
   version,
   websiteUrl: "https://painintheagent.com/integrations/",
   repository: { url: "https://github.com/krllagent/painintheagent-mcp", source: "github" },

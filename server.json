@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.krllagent/painintheagent-mcp",
   "title": "Pain in the Agent",
-  "description": "Humanize, rewrite and analyze prose with one shared Pain in the Agent account allowance.",
-  "version": "0.2.0",
+  "description": "Remove text watermarks, humanize and check AI writing with your Pain in the Agent account.",
+  "version": "0.3.0",
   "websiteUrl": "https://painintheagent.com/integrations/",
   "repository": {
     "url": "https://github.com/krllagent/painintheagent-mcp",
@@ -12,8 +12,8 @@
   "packages": [
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/krllagent/painintheagent-mcp/releases/download/v0.2.0/painintheagent-mcp-0.2.0.mcpb",
-      "fileSha256": "8d60637d084784f3e8573baeb0692e1cdfa3aab5594d7b337fbb1ac84f45d10c",
+      "identifier": "https://github.com/krllagent/painintheagent-mcp/releases/download/v0.3.0/painintheagent-mcp-0.3.0.mcpb",
+      "fileSha256": "c5a6d62047797dade8f3dfa4688ba9fad96069f27f91ba598a6d398a8ede657c",
       "transport": {
         "type": "stdio"
       }

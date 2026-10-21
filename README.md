@@ -1,12 +1,12 @@
 # Pain in the Agent MCP
 
-Use the [Pain in the Agent text tools](https://painintheagent.com/tools/) from an AI client. Humanize drafts, rewrite text watermarks, compare versions or check AI writing signals. Confirmed email accounts share 100 successful operations per month across all tools, the website, API and MCP, with 100–10,000 characters per text.
+Use the [Pain in the Agent text tools](https://painintheagent.com/tools/) from an AI client: remove text watermarks, humanize drafts, compare versions or check AI writing. Rewrites use the characters of your account's monthly plan: $5 a month for 100,000 characters, up to 10,000 per text, shared with the website and the remote MCP. Only a successful changed result is charged. Comparisons and AI checks are free and limited to 100 a day. The website's free tries (3 per browser) do not apply to the API or this client.
 
 The [research and examples](https://painintheagent.com/blog/text-watermark-removal-retest/) describe tests of rewrite methods against reference SynthID Text watermarks. Those measurements are separate from the live tool workflow. This client cannot verify Claude or Gemini's private watermark keys. AI writing signals are experimental style observations, not proof of authorship.
 
 ## Installation
 
-First [sign in and create an API key](https://painintheagent.com/integrations/). Keep the key in your client's secret settings or environment, outside conversations and source control. You do not need an OpenRouter or OpenAI key.
+First [subscribe and create an API key](https://painintheagent.com/integrations/) while signed in; rewrites need the monthly plan on that account. Keep the key in your client's secret settings or environment, outside conversations and source control. You do not need an OpenRouter or OpenAI key.
 
 ### Claude Desktop
 
@@ -48,17 +48,17 @@ Configure a stdio server with command `node` and one argument, the absolute path
 
 | Tool | What it does |
 | --- | --- |
-| `start_rewrite` | Starts a rewrite and promptly returns a `run_id`. Optional `slop_removal` is off by default. |
-| `start_humanize` | Makes targeted style edits with source checks. Optional `watermark_removal` adds deep rewriting. One shared run either way. |
-| `start_watermark_comparison` | Compares `source_text` and `candidate_text` for meaning changes. Does not detect private vendor watermarks. |
-| `start_ai_detection` | Checks at least 80 words of English or Russian prose for contextual AI writing signals. |
+| `start_rewrite` | Starts a watermark-removing rewrite and promptly returns a `run_id`. Uses characters from the plan. `slop_removal` is accepted and has no effect. |
+| `start_humanize` | Humanizes the text and removes its watermark by replacing the wording throughout, with before-and-after AI scores. Uses characters from the plan. |
+| `start_watermark_comparison` | Compares `source_text` and `candidate_text` for meaning changes. Free within the daily check limit. Does not detect vendor watermarks. |
+| `start_ai_detection` | Scores at least 80 words with a trained AI detector (0–100) and highlights AI-writing patterns. Free within the daily check limit. |
 | `get_result` | Reads progress or the saved result for any text tool without starting model work. |
 | `get_rewrite` | Returns progress, a saved result with fidelity notes, or an error for that ID. It starts no model work. |
-| `get_limits` | Reads the existing account allowance and input limits. |
+| `get_limits` | Reads the account's character allowance, the per-text limit and when the paid month ends. |
 
 Ask your agent to use the tool you need and show its source notes or quoted style evidence. Keep the client open while it works; deep rewriting can take several minutes. The local MCP process holds the streaming connection. Closing it can interrupt the run. The separate remote MCP endpoint at `https://painintheagent.com/mcp` supports OAuth and continues queued jobs after disconnecting.
 
-Save the request ID. If the stream fails, use `get_result` with that same ID. The earlier `get_rewrite` name still works. The client never automatically retries a POST. Reusing an ID with the same operation and input retrieves that run; a different operation, candidate or option is rejected. Failed runs do not consume successful-run quota. Pending requests reserve capacity until they finish or reach the server's deadline, and their IDs cannot start fresh work.
+Save the request ID. If the stream fails, use `get_result` with that same ID. The earlier `get_rewrite` name still works. The client never automatically retries a POST. Reusing an ID with the same operation and input retrieves that run; a different operation, candidate or option is rejected. Failed runs use no characters. Pending requests reserve their characters until they finish or reach the server's deadline, and their IDs cannot start fresh work.
 
 ## Privacy and gateways
 

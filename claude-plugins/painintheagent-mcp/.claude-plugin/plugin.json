@@ -1,7 +1,7 @@
 {
   "name": "painintheagent-mcp",
-  "version": "0.2.0",
-  "description": "Humanize, rewrite and analyze prose with the shared Pain in the Agent allowance.",
+  "version": "0.3.0",
+  "description": "Remove text watermarks, humanize and check AI writing with your Pain in the Agent account.",
   "author": {
     "name": "Kirill Balakhonov",
     "url": "https://painintheagent.com/about/"

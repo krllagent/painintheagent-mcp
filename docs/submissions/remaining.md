@@ -6,7 +6,7 @@ These are prepared submission materials, not claims of acceptance.
 
 Name: **Pain in the Agent MCP**
 
-Short description: **Rewrite text with fidelity checks using a shared free account allowance.**
+Short description: **Remove text watermarks, humanize and check AI writing with your Pain in the Agent account ($5 monthly plan for rewrites; checks free).**
 
 Repository: https://github.com/krllagent/painintheagent-mcp
 
@@ -20,7 +20,7 @@ Support: https://github.com/krllagent/painintheagent-mcp/issues
 
 The local stdio server runs with Node.js 22 or later. Its MCPB includes its
 dependencies. `start_rewrite` returns a request ID, `get_rewrite` reads progress
-or the saved result, and `get_limits` reads the existing free account allowance.
+or the saved result, and `get_limits` reads the account's character allowance.
 The browser and API share 100 successful rewrites per month and a maximum of
 10,000 characters per text. API keys are issued and revoked on the setup page.
 The service returns fidelity notes. It cannot verify private Claude/Gemini

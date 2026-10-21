@@ -1,7 +1,9 @@
 # Distribution status
 
 Verified on September 7, 2026. Publication, submission and directory review
-are recorded separately. The service remains free under its existing quotas.
+are recorded separately. Since October 2026 rewrites through the API and this client use the
+account's monthly plan ($5 for 100,000 characters); comparisons and AI checks are free within 100 a day. Version 0.3.0
+(October 21, 2026) describes that offer.
 
 | Destination | Status and evidence |
 | --- | --- |

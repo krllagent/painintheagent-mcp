@@ -7,8 +7,8 @@
     {
       "name": "painintheagent-mcp",
       "source": "./claude-plugins/painintheagent-mcp",
-      "description": "Text watermark rewrites with fidelity checks",
-      "version": "0.2.0"
+      "description": "Text watermark removal, humanizing and AI writing checks",
+      "version": "0.3.0"
     }
   ]
 }

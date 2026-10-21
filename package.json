@@ -1,8 +1,8 @@
 {
   "name": "painintheagent-mcp",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
-  "description": "MCP client for Pain in the Agent humanizing, rewriting and text analysis tools",
+  "description": "MCP client for the Pain in the Agent text tools: watermark removal, humanizing and AI detection",
   "license": "MIT",
   "author": "Kirill Balakhonov",
   "repository": "github:krllagent/painintheagent-mcp",
@@ -29,7 +29,7 @@
     "start": "node dist/index.cjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.30.0",
+    "@modelcontextprotocol/sdk": "1.32.1",
     "zod": "3.25.76"
   },
   "devDependencies": {

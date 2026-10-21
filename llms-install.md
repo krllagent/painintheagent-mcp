@@ -9,7 +9,7 @@ MCP server. Do not register the HTTPS REST API as an HTTP MCP server.
 3. Configure your client's stdio MCP server with command `node` and one
    argument, the absolute path to `dist/index.cjs`.
 4. The user creates an account key at https://painintheagent.com/integrations/
-   and provides `PAININTHEAGENT_API_KEY` through the client's environment or
+   (rewrites need the $5 monthly plan on that account) and provides `PAININTHEAGENT_API_KEY` through the client's environment or
    secret settings. Do not ask for the key in a chat message or print it.
 5. Omit `PAININTHEAGENT_BASE_URL` for the public service. If the operator
    provides a local gateway, forward that value too. Never switch endpoints
@@ -23,4 +23,4 @@ For a processing test, use only the text the user explicitly asks to submit.
 Call `start_rewrite` once, save its `run_id`, keep the process open and read
 `get_rewrite` after the suggested interval. Failed connections do not justify
 automatically submitting another request. See `docs/api.md` for recovery and
-the shared free allowance.
+the character allowance.
