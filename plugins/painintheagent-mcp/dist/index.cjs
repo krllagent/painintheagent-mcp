@@ -21740,7 +21740,7 @@ function safeCode(value) {
 
 // src/index.mjs
 var instructions = "Use this service only for text operations the user asks for: removing a text watermark, humanizing, comparing two versions or checking for AI writing. start_rewrite and start_humanize use characters from the account's monthly plan ($5 a month for 100,000 characters, shared with the website and the remote MCP); only a successful changed result is charged. Comparisons and AI checks are free and count toward a separate limit of 100 checks a day; without a plan they take texts of up to 1,000 characters. Save the run_id and read get_result instead of starting another request. Keep this MCP process open while a run works. The ChatGPT, Claude and Gemini watermark detectors are not public, so complete removal cannot be verified.";
-var server = new McpServer({ name: "painintheagent-mcp", version: "0.3.1" }, { instructions });
+var server = new McpServer({ name: "painintheagent-mcp", version: "0.3.2" }, { instructions });
 var client;
 var api = () => client ??= new RewriteClient();
 var runId = external_exports.string().uuid().describe("The run_id returned by start_rewrite. Reuse it to retrieve that run.");

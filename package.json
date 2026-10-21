@@ -1,6 +1,6 @@
 {
   "name": "painintheagent-mcp",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "type": "module",
   "description": "MCP client for the Pain in the Agent text tools: watermark removal, humanizing and AI detection",
   "license": "MIT",
@@ -8,7 +8,7 @@
   "repository": "github:krllagent/painintheagent-mcp",
   "homepage": "https://painintheagent.com/integrations/",
   "engines": {
-    "node": ">=22"
+    "node": "^22.23.4 || ^24.22.1 || >=26.12.1"
   },
   "bin": {
     "painintheagent-mcp": "dist/index.cjs"
@@ -36,5 +36,8 @@
     "@anthropic-ai/mcpb": "2.1.2",
     "esbuild": "0.28.2",
     "fflate": "0.8.2"
+  },
+  "overrides": {
+    "tmp": "^0.2.6"
   }
 }
