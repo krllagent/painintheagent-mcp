@@ -4,6 +4,10 @@ Use the [Pain in the Agent text tools](https://painintheagent.com/tools/) from a
 
 The [research and examples](https://painintheagent.com/blog/text-watermark-removal-retest/) describe tests of rewrite methods against reference SynthID Text watermarks. Those measurements are separate from the live tool workflow. This client cannot verify Claude or Gemini's private watermark keys. AI writing signals are experimental style observations, not proof of authorship.
 
+## Pay per run without an account
+
+An agent with its own wallet can pay for a single run in USDC over x402, on Base or Solana. No account, email or subscription is needed. Send the text to `POST https://painintheagent.com/api/x402/humanize` or `POST https://painintheagent.com/api/x402/remove-watermark`. The first answer is 402 with the price for that text: $0.10 per started 1,000 characters, from 100 to 10,000 characters. MPP clients can pay the same price on Base with the `evm` method. Repeat the request with the signed payment and you get a receipt with `status_url` and `result_token`. The payment is taken only after a changed result is ready, so a failed or unchanged run costs nothing. This MCP client does not make payments itself: it uses an account API key. The paid routes are described in [openapi.json](https://painintheagent.com/openapi.json) and on the [integrations page](https://painintheagent.com/integrations/#pay-per-run).
+
 ## Installation
 
 First [subscribe and create an API key](https://painintheagent.com/integrations/) while signed in; rewrites need the monthly plan on that account. Keep the key in your client's secret settings or environment, outside conversations and source control. You do not need an OpenRouter or OpenAI key.
